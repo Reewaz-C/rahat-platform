@@ -12,6 +12,11 @@ on:
       env_secret_name:
         required: true
         type: string
+    secrets:
+      VAULT_URL:
+        required: false
+      VAULT_TOKEN:
+        required: false
 
 
 
