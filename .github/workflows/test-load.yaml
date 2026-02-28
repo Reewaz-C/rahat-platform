@@ -1,16 +1,16 @@
-name: AA Test Load
+# name: AA Test Load
 
-on:
-  push:
-    branches:
-      - test-load
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - test-load
+#   workflow_dispatch:
 
-jobs:
-  call-core:
-    uses: rahataid/rahat-platform/.github/workflows/AA-Core-CICD.yaml@test-load
-    with:
-      apps_to_build: beneficiary,rahat
-      tag_suffix: test-load
-      env_secret_name: ENV_AA_TEST_LOAD
-    secrets: inherit
+# jobs:
+#   call-core:
+#     uses: rahataid/rahat-platform/.github/workflows/AA-Core-CICD.yaml@test-load
+#     with:
+#       apps_to_build: beneficiary,rahat
+#       tag_suffix: test-load
+#       env_secret_name: ENV_AA_TEST_LOAD
+#     secrets: inherit
