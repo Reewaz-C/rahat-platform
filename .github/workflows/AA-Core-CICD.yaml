@@ -12,11 +12,11 @@ on:
       env_secret_name:
         required: true
         type: string
-    secrets:
-      VAULT_URL:
-        required: true
-      VAULT_TOKEN:
-        required: true
+    # secrets:
+    #   VAULT_URL:
+    #     required: true
+    #   VAULT_TOKEN:
+    #     required: true
 
 
 concurrency:
