@@ -12,11 +12,7 @@ on:
       env_secret_name:
         required: true
         type: string
-    # secrets:
-    #   VAULT_URL:
-    #     required: true
-    #   VAULT_TOKEN:
-    #     required: true
+
 
 
 concurrency:
@@ -98,18 +94,7 @@ jobs:
         run: npx nx build ${{ matrix.app }}
 
 
-      # # -----------------------------
-      # # Vault Import
-      # # -----------------------------
-      # - name: Import Secrets from Vault
-      #   id: vault
-      #   uses: hashicorp/vault-action@v2.4.0
-      #   with:
-      #     url: ${{ secrets.VAULT_URL }}
-      #     token: ${{ secrets.VAULT_TOKEN }}
-      #     secrets: |
-      #       github/data/general/docker/esatya username | DOCKERHUB_USERNAME ;
-      #       github/data/general/docker/esatya password | DOCKERHUB_TOKEN ;
+
       # -----------------------------
       # Docker Setup
       # -----------------------------
