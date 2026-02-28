@@ -1,94 +1,47 @@
-name: AA CORE CI/CD
+name: AA Test Load
 
 on:
-  workflow_call:
-    inputs:
-      apps_to_build:
-        required: false
-        type: string
-      tag_suffix:
-        required: true
-        type: string
-      env_secret_name:
-        required: true
-        type: string
-    secrets:
-      VAULT_URL:
-        required: false
-      VAULT_TOKEN:
-        required: false
-
-
-
-concurrency:
-  group: aa-core-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  push:
+    branches:
+      - test-load
+  workflow_dispatch:
 
 env:
   CI: false
   NODE_VERSION: "20.10.0"
   PNPM_VERSION: "8.14.1"
-  REGISTRY: docker.io
   IMAGE_NAMESPACE: rexxx9865
 
 jobs:
   setup:
-    name: Setup Build Matrix
-    runs-on: k8s-runner-set-rahat
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Generate Build Matrix
-        id: set-matrix
-        run: |
-          APPS="${{ inputs.apps_to_build }}"
-          if [ -z "$APPS" ]; then
-            APPS="beneficiary,rahat"
-          fi
-          JSON=$(printf '%s\n' "$APPS" | awk -F',' '{printf "["; for(i=1;i<=NF;i++) printf "\"%s\"%s",$i,(i==NF?"":","); printf "]"}')
-          echo "matrix={\"app\":$JSON}" >> $GITHUB_OUTPUT
+      - id: set-matrix
+        run: echo "matrix={\"app\":[\"beneficiary\",\"rahat\"]}" >> $GITHUB_OUTPUT
 
   build:
-    name: Build & Push - ${{ matrix.app }}
-    runs-on: ubuntu-latest
     needs: setup
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-
-    permissions:
-      contents: read
-      packages: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # -----------------------------
-      # Node + PNPM Setup
-      # -----------------------------
-
-      # Setup Node FIRST
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      # Then setup PNPM
       - name: Setup PNPM
         uses: pnpm/action-setup@v3
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      # -----------------------------
-      # Inject Environment
-      # -----------------------------
-      - name: Inject Environment File
-        run: |
-          echo "${{ secrets[inputs.env_secret_name] }}" > .env
+      - name: Create .env
+        run: echo "${{ secrets.ENV_AA_TEST_LOAD }}" > .env
 
       - name: Install Dependencies
         run: |
@@ -98,37 +51,150 @@ jobs:
       - name: Build Application
         run: npx nx build ${{ matrix.app }}
 
-
-
-      # -----------------------------
-      # Docker Setup
-      # -----------------------------
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: rexxx9865
-          password: dckr_pat_CpiQjg2k0_R46NHXMJvja_rPfyQ
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PAT }}
 
-      - name: Extract Git Metadata
-        id: meta
-        run: |
-          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-          echo "run_number=${GITHUB_RUN_NUMBER}" >> $GITHUB_OUTPUT
-
-      # -----------------------------
-      # Docker Build & Push
-      # -----------------------------
-      - name: Build and Push Docker Image
+      - name: Build and Push
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile.${{ matrix.app }}
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:${{ inputs.tag_suffix }}
-            ${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:${{ inputs.tag_suffix }}-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.run_number }}
+          tags: ${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:test-load
+# name: AA CORE CI/CD
+
+# on:
+#   workflow_call:
+#     inputs:
+#       apps_to_build:
+#         required: false
+#         type: string
+#       tag_suffix:
+#         required: true
+#         type: string
+#       env_secret_name:
+#         required: true
+#         type: string
+#     secrets:
+#       VAULT_URL:
+#         required: false
+#       VAULT_TOKEN:
+#         required: false
+
+
+
+# concurrency:
+#   group: aa-core-${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
+
+# env:
+#   CI: false
+#   NODE_VERSION: "20.10.0"
+#   PNPM_VERSION: "8.14.1"
+#   REGISTRY: docker.io
+#   IMAGE_NAMESPACE: rexxx9865
+
+# jobs:
+#   setup:
+#     name: Setup Build Matrix
+#     runs-on: k8s-runner-set-rahat
+#     outputs:
+#       matrix: ${{ steps.set-matrix.outputs.matrix }}
+#     steps:
+#       - name: Generate Build Matrix
+#         id: set-matrix
+#         run: |
+#           APPS="${{ inputs.apps_to_build }}"
+#           if [ -z "$APPS" ]; then
+#             APPS="beneficiary,rahat"
+#           fi
+#           JSON=$(printf '%s\n' "$APPS" | awk -F',' '{printf "["; for(i=1;i<=NF;i++) printf "\"%s\"%s",$i,(i==NF?"":","); printf "]"}')
+#           echo "matrix={\"app\":$JSON}" >> $GITHUB_OUTPUT
+
+#   build:
+#     name: Build & Push - ${{ matrix.app }}
+#     runs-on: ubuntu-latest
+#     needs: setup
+#     strategy:
+#       fail-fast: false
+#       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+
+#     permissions:
+#       contents: read
+#       packages: write
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       # -----------------------------
+#       # Node + PNPM Setup
+#       # -----------------------------
+
+#       # Setup Node FIRST
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: ${{ env.NODE_VERSION }}
+
+#       - name: Enable Corepack
+#         run: corepack enable
+
+#       # Then setup PNPM
+#       - name: Setup PNPM
+#         uses: pnpm/action-setup@v3
+#         with:
+#           version: ${{ env.PNPM_VERSION }}
+
+#       # -----------------------------
+#       # Inject Environment
+#       # -----------------------------
+#       - name: Inject Environment File
+#         run: |
+#           echo "${{ secrets[inputs.env_secret_name] }}" > .env
+
+#       - name: Install Dependencies
+#         run: |
+#           pnpm install
+#           pnpm prisma:generate
+
+#       - name: Build Application
+#         run: npx nx build ${{ matrix.app }}
+
+
+
+#       # -----------------------------
+#       # Docker Setup
+#       # -----------------------------
+#       - name: Setup Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+
+#       - name: Login to Docker Hub
+#         uses: docker/login-action@v3
+#         with:
+#           username: rexxx9865
+#           password: dckr_pat_CpiQjg2k0_R46NHXMJvja_rPfyQ
+
+#       - name: Extract Git Metadata
+#         id: meta
+#         run: |
+#           echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+#           echo "run_number=${GITHUB_RUN_NUMBER}" >> $GITHUB_OUTPUT
+
+#       # -----------------------------
+#       # Docker Build & Push
+#       # -----------------------------
+#       - name: Build and Push Docker Image
+#         uses: docker/build-push-action@v5
+#         with:
+#           context: .
+#           file: Dockerfile.${{ matrix.app }}
+#           push: true
+#           cache-from: type=gha
+#           cache-to: type=gha,mode=max
+#           tags: |
+#             ${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:${{ inputs.tag_suffix }}
+#             ${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:${{ inputs.tag_suffix }}-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.run_number }}
