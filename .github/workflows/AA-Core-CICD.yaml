@@ -28,7 +28,7 @@ env:
   NODE_VERSION: "20.10.0"
   PNPM_VERSION: "8.14.1"
   REGISTRY: docker.io
-  IMAGE_NAMESPACE: esatya
+  IMAGE_NAMESPACE: rexxx9865
 
 jobs:
   setup:
@@ -98,18 +98,18 @@ jobs:
         run: npx nx build ${{ matrix.app }}
 
 
-      # -----------------------------
-      # Vault Import
-      # -----------------------------
-      - name: Import Secrets from Vault
-        id: vault
-        uses: hashicorp/vault-action@v2.4.0
-        with:
-          url: ${{ secrets.VAULT_URL }}
-          token: ${{ secrets.VAULT_TOKEN }}
-          secrets: |
-            github/data/general/docker/esatya username | DOCKERHUB_USERNAME ;
-            github/data/general/docker/esatya password | DOCKERHUB_TOKEN ;
+      # # -----------------------------
+      # # Vault Import
+      # # -----------------------------
+      # - name: Import Secrets from Vault
+      #   id: vault
+      #   uses: hashicorp/vault-action@v2.4.0
+      #   with:
+      #     url: ${{ secrets.VAULT_URL }}
+      #     token: ${{ secrets.VAULT_TOKEN }}
+      #     secrets: |
+      #       github/data/general/docker/esatya username | DOCKERHUB_USERNAME ;
+      #       github/data/general/docker/esatya password | DOCKERHUB_TOKEN ;
       # -----------------------------
       # Docker Setup
       # -----------------------------
@@ -119,8 +119,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ steps.vault.outputs.DOCKERHUB_USERNAME }}
-          password: ${{ steps.vault.outputs.DOCKERHUB_TOKEN }}
+          username: rexxx9865
+          password: dckr_pat_CpiQjg2k0_R46NHXMJvja_rPfyQ
 
       - name: Extract Git Metadata
         id: meta
