@@ -13,4 +13,4 @@ jobs:
       apps_to_build: beneficiary,rahat
       tag_suffix: test-load
       env_secret_name: ENV_AA_TEST_LOAD
-    # secrets: inherit
+    secrets: inherit
