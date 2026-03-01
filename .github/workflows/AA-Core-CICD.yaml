@@ -64,6 +64,7 @@ jobs:
           file: Dockerfile.${{ matrix.app }}
           push: true
           tags: ${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:test-load
+          
 # name: AA CORE CI/CD
 
 # on:
