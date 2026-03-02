@@ -57,14 +57,39 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build and Push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile.${{ matrix.app }}
-          push: true
-          tags: ${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:test-load
-          
+      - name: Build and Push with Kaniko
+        run: |
+          kubectl run kaniko-${{ matrix.app }} \
+            --rm -i --restart=Never \
+            --namespace=arc-runners \
+            --image=gcr.io/kaniko-project/executor:latest \
+            --overrides='
+            {
+              "apiVersion": "v1",
+              "spec": {
+                "containers": [{
+                  "name": "kaniko",
+                  "image": "gcr.io/kaniko-project/executor:latest",
+                  "args": [
+                    "--dockerfile=Dockerfile.${{ matrix.app }}",
+                    "--context=dir://$(pwd)",
+                    "--destination=${{ env.IMAGE_NAMESPACE }}/rahat-platform-${{ matrix.app }}:test-load",
+                    "--cache=true"
+                  ],
+                  "volumeMounts": [{
+                    "name": "docker-config",
+                    "mountPath": "/kaniko/.docker"
+                  }]
+                }],
+                "restartPolicy": "Never",
+                "volumes": [{
+                  "name": "docker-config",
+                  "secret": {
+                    "secretName": "dockerhub-secret"
+                  }
+                }]
+              }
+            }'
 # name: AA CORE CI/CD
 
 # on:
