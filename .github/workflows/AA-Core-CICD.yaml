@@ -24,7 +24,7 @@ jobs:
 
   build:
     needs: setup
-    runs-on: k8s-runner-set-rahat
+    runs-on: k8s-runner-set-dgx
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
