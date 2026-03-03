@@ -15,7 +15,7 @@ env:
 
 jobs:
   setup:
-    runs-on: k8s-runner-set-rahat
+    runs-on: k8s-runner-set-dgx
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
